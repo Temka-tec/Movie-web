@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronRight } from "lucide-react";
 
 type Genre = {
   id: number;
   name: string;
 };
 
-export default function GenresMenu() {
+export const GenresMenu = () => {
   const [genres, setGenres] = useState<Genre[]>([]);
 
   useEffect(() => {
@@ -22,27 +23,33 @@ export default function GenresMenu() {
       );
 
       const data = await res.json();
-      setGenres(data.genres);
+      setGenres(data.genres || []);
     };
 
     fetchGenres();
   }, []);
 
   return (
-    <div className="w-full p-6">
+    <div className="bg-white rounded-2xl p-8 shadow-sm w-full">
+      {/* Title Section */}
       <h1 className="text-4xl font-bold mb-1">Genres</h1>
-      <p className="text-lg text-gray-600 mb-4">See lists of movies by genre</p>
+      <p className="text-lg text-gray-600 mb-6">See lists of movies by genre</p>
 
-      <div className="flex flex-wrap gap-3 mt-4">
+      <hr className="mb-6" />
+
+      {/* Genre Buttons */}
+      <div className="flex flex-wrap gap-3">
         {genres.map((g) => (
           <button
             key={g.id}
-            className="px-4 py-2 bg-gray-100 rounded-full border hover:bg-gray-200 transition"
+            className="flex items-center gap-1 px-4 py-2 bg-gray-100 
+                       rounded-full border hover:bg-gray-200 transition"
           >
             {g.name}
+            <ChevronRight className="size-4" />
           </button>
         ))}
       </div>
     </div>
   );
-}
+};
