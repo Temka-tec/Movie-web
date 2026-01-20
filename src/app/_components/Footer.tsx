@@ -33,7 +33,7 @@ export const Footer = () => {
                 Facebook
               </a>
               <a href="#" className="hover:underline">
-                Instagram
+                Instagramb
               </a>
               <a href="#" className="hover:underline">
                 Twitter
