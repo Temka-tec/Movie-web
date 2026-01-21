@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-
 import { Star } from "lucide-react";
-import MovieDetailPage from "../movie/[movieId]/page";
 
 type MovieCardProps = {
   movie: MovieProps;
 };
+
 export const MovieCard = ({ movie }: MovieCardProps) => {
   return (
-    <div className="w-full ">
+    <Link href={`/movie/${movie.id}`} className="w-full block cursor-pointer">
       <img
         src={"https://image.tmdb.org/t/p/w500" + movie.poster_path}
-        className="w-[300px] h-[450px] rounded-t-md"
+        className="w-[300px] h-[450px] rounded-t-md object-cover"
+        alt={movie.title || movie.original_title}
       />
 
       <div className="w-[300px] h-[100px] pl-3 bg-gray-100 rounded-b-lg">
@@ -23,10 +23,11 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
             {movie.vote_average}
           </p>
         </div>
+
         <p className="text-[20px] leading-7 font-normal line-clamp-2">
           {movie.title || movie.original_title}
         </p>
       </div>
-    </div>
+    </Link>
   );
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MovieDetail } from "@/app/_components/MovieDetail";
 
 type PageProps = {
   params: {
@@ -37,6 +38,7 @@ const MovieDetailPage = ({ params }: PageProps) => {
         src={`${process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL}/original/${movie?.poster_path}`}
         alt=""
       />
+      <MovieDetail movieId={params.movieId} />
     </div>
   );
 };
