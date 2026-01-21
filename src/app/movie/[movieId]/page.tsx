@@ -1,5 +1,5 @@
 "use client";
-
+import { use } from "react";
 import { useEffect, useState } from "react";
 import { MovieDetail } from "@/app/_components/MovieDetail";
 

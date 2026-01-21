@@ -1,5 +1,5 @@
 "use client";
-
+import { use } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Star, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -39,29 +39,25 @@ export const MovieDetail = ({ movieId }: MovieDetailProps) => {
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [loadingTrailer, setLoadingTrailer] = useState(false);
 
+  const BASE = process.env.NEXT_PUBLIC_TMDB_BASE_URL;
   const IMG = process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL;
+  const TOKEN = process.env.NEXT_PUBLIC_TMDB_API_TOKEN;
 
   useEffect(() => {
+    if (!BASE || !TOKEN) {
+      console.error("Missing env: NEXT_PUBLIC_TMDB_BASE_URL or NEXT_PUBLIC_TMDB_API_TOKEN");
+      return;
+    }
+
     const fetchAll = async () => {
+      const headers = {
+        Authorization: `Bearer ${TOKEN}`,
+        accept: "application/json",
+      };
+
       const [movieRes, creditsRes] = await Promise.all([
-        fetch(
-          `${process.env.NEXT_PUBLIC_TMDB_BASE_URL}/movie/${movieId}?language=en-US`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.TMDB_API_TOKEN}`,
-              accept: "application/json",
-            },
-          },
-        ),
-        fetch(
-          `${process.env.NEXT_PUBLIC_TMDB_BASE_URL}/movie/${movieId}/credits?language=en-US`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_TOKEN}`,
-              accept: "application/json",
-            },
-          },
-        ),
+        fetch(`${BASE}/movie/${movieId}?language=en-US`, { headers }),
+        fetch(`${BASE}/movie/${movieId}/credits?language=en-US`, { headers }),
       ]);
 
       const movieData = await movieRes.json();
@@ -72,7 +68,7 @@ export const MovieDetail = ({ movieId }: MovieDetailProps) => {
     };
 
     fetchAll();
-  }, [movieId]);
+  }, [movieId, BASE, TOKEN]);
 
   const director = useMemo(() => {
     const d = credits?.crew?.find((p) => p.job === "Director");
@@ -80,13 +76,29 @@ export const MovieDetail = ({ movieId }: MovieDetailProps) => {
   }, [credits]);
 
   const writers = useMemo(() => {
-    const list =
-      credits?.crew?.filter(
-        (p) =>
-          p.department === "Writing" ||
-          p.job === "Writer" ||
-          p.job === "Screenplay",
-      ) ?? [];
+    const crew = credits?.crew ?? [];
+
+    // TMDB дээр writer job олон янзаар ирдэг
+    const writingJobs = new Set([
+      "Writer",
+      "Screenplay",
+      "Story",
+      "Novel",
+      "Characters",
+      "Author",
+      "Original Story",
+      "Teleplay",
+      "Comic Book",
+      "Book",
+      "Adaptation",
+    ]);
+
+    const list = crew.filter((p) => {
+      const job = (p.job ?? "").trim();
+      const dep = (p.department ?? "").trim();
+      return dep === "Writing" || writingJobs.has(job);
+    });
+
     const uniq = Array.from(new Set(list.map((x) => x.name)));
     return uniq.slice(0, 4).join(" · ");
   }, [credits]);
@@ -96,35 +108,36 @@ export const MovieDetail = ({ movieId }: MovieDetailProps) => {
     return list.slice(0, 3).join(" · ");
   }, [credits]);
 
-  const posterUrl = movie?.poster_path
-    ? `${IMG}/w500${movie.poster_path}`
-    : "/no-poster.png";
-  const backdropUrl = movie?.backdrop_path
-    ? `${IMG}/original${movie.backdrop_path}`
-    : posterUrl;
+  // ✅ зураг орохгүй асуудлыг энд 100% баталгаажууллаа
+  const posterUrl =
+    movie?.poster_path && IMG
+      ? `${IMG}/w500${movie.poster_path}`
+      : "/no-poster.png";
+
+  const backdropUrl =
+    movie?.backdrop_path && IMG
+      ? `${IMG}/original${movie.backdrop_path}`
+      : posterUrl;
 
   const playTrailer = async () => {
-    if (!movie?.id) return;
+    if (!movie?.id || !BASE || !TOKEN) return;
+
     try {
       setLoadingTrailer(true);
       setTrailerKey(null);
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_TMDB_BASE_URL}/movie/${movie.id}/videos?language=en-US`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_TOKEN}`,
-            accept: "application/json",
-          },
+      const res = await fetch(`${BASE}/movie/${movie.id}/videos?language=en-US`, {
+        headers: {
+          Authorization: `Bearer ${TOKEN}`,
+          accept: "application/json",
         },
-      );
+      });
 
       const data: { results: TMDBVideo[] } = await res.json();
 
       const trailer =
-        data.results.find(
-          (v) => v.site === "YouTube" && v.type === "Trailer",
-        ) ?? data.results.find((v) => v.site === "YouTube");
+        data.results.find((v) => v.site === "YouTube" && v.type === "Trailer") ??
+        data.results.find((v) => v.site === "YouTube");
 
       setOpenTrailer(true);
       if (trailer) setTrailerKey(trailer.key);
@@ -269,6 +282,8 @@ export const MovieDetail = ({ movieId }: MovieDetailProps) => {
           </div>
         </DialogContent>
       </Dialog>
+      console.log("IMG", IMG);
+
     </div>
   );
 };
