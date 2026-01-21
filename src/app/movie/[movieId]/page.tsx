@@ -34,7 +34,7 @@ const MovieDetailPage = ({ params }: PageProps) => {
   return (
     <div>
       <img
-        src={`${process.env.TMDB_IMAGE_SERVICE_URL}/original/${movie?.poster_path}`}
+        src={`${process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL}/original/${movie?.poster_path}`}
         alt=""
       />
     </div>
