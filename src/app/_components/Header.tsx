@@ -2,19 +2,17 @@
 
 import { Film, Sun, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 type Genre = { id: number; name: string };
 
 export const Header = () => {
   const router = useRouter();
-  const sp = useSearchParams();
 
   const [openGenre, setOpenGenre] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [selected, setSelected] = useState<Genre | null>(null);
-
-  const [q, setQ] = useState(sp.get("q") ?? "");
+  const [q, setQ] = useState("");
 
   const didMount = useRef(false);
 
@@ -32,7 +30,6 @@ export const Header = () => {
       const data = await res.json();
       setGenres(data.genres || []);
     };
-
     fetchGenres();
   }, []);
 
@@ -54,7 +51,6 @@ export const Header = () => {
   const pickGenre = (g: Genre | null) => {
     setSelected(g);
     setOpenGenre(false);
-
     setQ("");
 
     if (!g) router.push("/discover");
