@@ -1,24 +1,104 @@
-import { Icon, icons } from "lucide-react";
+"use client";
 
-import { Film } from "lucide-react";
-import { Sun } from "lucide-react";
-import { GenreSection } from "./GenreSection";
+import { Film, Sun, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
 
-export const Header = () => {
+type Genre = { id: number; name: string };
+
+export const Header = ({
+  onGenreSelect,
+  onSearch,
+}: {
+  onGenreSelect: (genre: Genre | null) => void;
+  onSearch: (q: string) => void;
+}) => {
+  const [openGenre, setOpenGenre] = useState(false);
+  const [genres, setGenres] = useState<Genre[]>([]);
+  const [selected, setSelected] = useState<Genre | null>(null);
+  const [q, setQ] = useState("");
+
+  useEffect(() => {
+    const fetchGenres = async () => {
+      const res = await fetch(
+        "https://api.themoviedb.org/3/genre/movie/list?language=en",
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_TOKEN}`,
+            accept: "application/json",
+          },
+        },
+      );
+      const data = await res.json();
+      setGenres(data.genres || []);
+    };
+    fetchGenres();
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => onSearch(q), 350);
+    return () => clearTimeout(t);
+  }, [q, onSearch]);
+
+  const pickGenre = (g: Genre | null) => {
+    setSelected(g);
+    onGenreSelect(g);
+    setOpenGenre(false);
+  };
+
   return (
-    <div className="flex h-[59px] items-center justify-around">
-      <div className="flex flex-wrap">
-        <div className="flex">
+    <header className="sticky top-0 z-50 bg-white border-b">
+      <div className="h-[59px] flex items-center justify-between px-6">
+        <div className="flex items-center gap-2">
           <Film className="text-indigo-700" />
-          <p className="text-indigo-700 text-1xl">MovieZ</p>
+          <p className="text-indigo-700 font-semibold">MovieZ</p>
         </div>
+
+        <div className="flex items-center gap-3 relative">
+          <div className="relative">
+            <button
+              onClick={() => setOpenGenre((v) => !v)}
+              className="h-10 px-3 rounded-md border flex items-center gap-2 text-sm"
+            >
+              <span>{selected ? selected.name : "Genre"}</span>
+              <ChevronDown className="size-4 opacity-70" />
+            </button>
+
+            {openGenre && (
+              <div className="absolute mt-2 w-64 rounded-xl border bg-white shadow-lg p-2 z-50">
+                <button
+                  onClick={() => pickGenre(null)}
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                >
+                  All
+                </button>
+
+                <div className="max-h-72 overflow-auto">
+                  {genres.map((g) => (
+                    <button
+                      key={g.id}
+                      onClick={() => pickGenre(g)}
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                    >
+                      {g.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search..."
+            className="h-10 w-[420px] max-w-[55vw] rounded-md border px-3 text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+          />
+        </div>
+
+        <button className="h-10 w-10 rounded-md border grid place-items-center">
+          <Sun className="size-5" />
+        </button>
       </div>
-      <div className="flex flex-wrap">
-        <GenreSection />
-      </div>
-      <div className="">
-        <Sun />
-      </div>
-    </div>
+    </header>
   );
 };
