@@ -5,13 +5,7 @@ import { useEffect, useState } from "react";
 
 type Genre = { id: number; name: string };
 
-export const Header = ({
-  onGenreSelect,
-  onSearch,
-}: {
-  onGenreSelect: (genre: Genre | null) => void;
-  onSearch: (q: string) => void;
-}) => {
+export const Header = () => {
   const [openGenre, setOpenGenre] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [selected, setSelected] = useState<Genre | null>(null);
@@ -31,17 +25,12 @@ export const Header = ({
       const data = await res.json();
       setGenres(data.genres || []);
     };
+
     fetchGenres();
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => onSearch(q), 350);
-    return () => clearTimeout(t);
-  }, [q, onSearch]);
-
   const pickGenre = (g: Genre | null) => {
     setSelected(g);
-    onGenreSelect(g);
     setOpenGenre(false);
   };
 
