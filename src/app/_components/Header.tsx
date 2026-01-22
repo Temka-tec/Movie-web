@@ -1,15 +1,22 @@
 "use client";
 
 import { Film, Sun, ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 type Genre = { id: number; name: string };
 
 export const Header = () => {
+  const router = useRouter();
+  const sp = useSearchParams();
+
   const [openGenre, setOpenGenre] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [selected, setSelected] = useState<Genre | null>(null);
-  const [q, setQ] = useState("");
+
+  const [q, setQ] = useState(sp.get("q") ?? "");
+
+  const didMount = useRef(false);
 
   useEffect(() => {
     const fetchGenres = async () => {
@@ -29,9 +36,30 @@ export const Header = () => {
     fetchGenres();
   }, []);
 
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      return;
+    }
+
+    const t = setTimeout(() => {
+      const text = q.trim();
+      if (text) router.push(`/discover?q=${encodeURIComponent(text)}`);
+      else router.push("/discover");
+    }, 350);
+
+    return () => clearTimeout(t);
+  }, [q, router]);
+
   const pickGenre = (g: Genre | null) => {
     setSelected(g);
     setOpenGenre(false);
+
+    setQ("");
+
+    if (!g) router.push("/discover");
+    else
+      router.push(`/discover?genre=${g.id}&name=${encodeURIComponent(g.name)}`);
   };
 
   return (
@@ -46,7 +74,7 @@ export const Header = () => {
           <div className="relative">
             <button
               onClick={() => setOpenGenre((v) => !v)}
-              className="h-10 px-3 rounded-md border flex items-center gap-2 text-sm"
+              className="h-10 px-3 rounded-md border flex items-center gap-2 text-sm bg-white"
             >
               <span>{selected ? selected.name : "Genre"}</span>
               <ChevronDown className="size-4 opacity-70" />

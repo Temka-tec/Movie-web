@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 type Genre = { id: number; name: string };
 
@@ -19,25 +21,22 @@ type TMDBListResponse = {
   results: Movie[];
 };
 
-export const SearchAndGenreSection = ({
-  query,
-}: {
-  query: string; // Header-ээс ирэх search текст
-}) => {
-  const [genres, setGenres] = useState<Genre[]>([]);
-  const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
+export const SearchAndGenreSection = () => {
+  const sp = useSearchParams();
 
+  const qFromUrl = (sp.get("q") ?? "").trim();
+  const genreIdStr = sp.get("genre");
+  const genreId = genreIdStr ? Number(genreIdStr) : null;
+  const genreName = sp.get("name") ? decodeURIComponent(sp.get("name")!) : "";
+
+  const [genres, setGenres] = useState<Genre[]>([]);
   const [movies, setMovies] = useState<Movie[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-
   const [loading, setLoading] = useState(false);
 
-  // query хоосон эсэхийг цэвэрхэн шалгах
-  const q = useMemo(() => query.trim(), [query]);
-  const isSearching = q.length > 0;
+  const isSearching = qFromUrl.length > 0;
 
-  // 1) Genres татах
   useEffect(() => {
     const fetchGenres = async () => {
       const res = await fetch(
@@ -56,12 +55,10 @@ export const SearchAndGenreSection = ({
     fetchGenres();
   }, []);
 
-  // 2) query эсвэл genre солигдоход page-г 1 болгох
   useEffect(() => {
     setPage(1);
-  }, [q, selectedGenre?.id]);
+  }, [qFromUrl, genreId]);
 
-  // 3) Movies татах (Search байвал Search API, үгүй бол Genre API)
   useEffect(() => {
     const fetchMovies = async () => {
       setLoading(true);
@@ -69,17 +66,12 @@ export const SearchAndGenreSection = ({
         let url = "";
 
         if (isSearching) {
-          // ✅ Search: Wicked гэх мэт
           url = `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(
-            q,
+            qFromUrl,
           )}&language=en-US&page=${page}`;
-        } else if (selectedGenre) {
-          // ✅ Genre: Action гэх мэт
-          url = `https://api.themoviedb.org/3/discover/movie?with_genres=${
-            selectedGenre.id
-          }&language=en-US&page=${page}&sort_by=popularity.desc`;
+        } else if (genreId) {
+          url = `https://api.themoviedb.org/3/discover/movie?with_genres=${genreId}&language=en-US&page=${page}&sort_by=popularity.desc`;
         } else {
-          // ✅ Default (жишээ: popular)
           url = `https://api.themoviedb.org/3/movie/popular?language=en-US&page=${page}`;
         }
 
@@ -90,39 +82,41 @@ export const SearchAndGenreSection = ({
           },
         });
 
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`TMDB error ${res.status}: ${text}`);
+        }
+
         const data: TMDBListResponse = await res.json();
         setMovies(data.results || []);
-        setTotalPages(Math.min(data.total_pages || 1, 500)); // TMDB max 500
+        setTotalPages(Math.min(data.total_pages || 1, 500));
+      } catch (e) {
+        console.error(e);
+        setMovies([]);
+        setTotalPages(1);
       } finally {
         setLoading(false);
       }
     };
 
     fetchMovies();
-  }, [isSearching, q, selectedGenre?.id, page]);
-
-  // Genre дархад: search байвал search-ийг дарж genre харуулах уу?
-  // Энэ компонент дээр бол: genre дархад query-г өөр газар хадгалж байвал
-  // чи query-г хоосолж болно. Одоохондоо логик нь:
-  // query байвал search priority хэвээр байна.
-  // Хэрвээ genre дархад шууд genre харуулахыг хүсвэл доорхи comment-г уншаарай.
+  }, [isSearching, qFromUrl, genreId, page]);
 
   const headingTitle = isSearching
-    ? `Search results`
-    : selectedGenre
-      ? selectedGenre.name
+    ? "Search results"
+    : genreId
+      ? genreName || "Genre"
       : "Popular";
 
   const subTitle = isSearching
-    ? `${movies.length} results for “${q}”`
-    : selectedGenre
-      ? `Movies in “${selectedGenre.name}”`
+    ? `Results for “${qFromUrl}”`
+    : genreId
+      ? `Movies in “${genreName || "this genre"}”`
       : "Trending / popular movies";
 
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-8">
       <div className="grid grid-cols-1 md:grid-cols-[1fr_320px] gap-10">
-        {/* LEFT: RESULTS */}
         <div>
           <h1 className="text-3xl font-bold mb-2">{headingTitle}</h1>
           <p className="text-gray-600 mb-6">{subTitle}</p>
@@ -134,9 +128,10 @@ export const SearchAndGenreSection = ({
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {movies.map((m) => (
-                <div
+                <Link
                   key={m.id}
-                  className="rounded-xl border bg-white overflow-hidden"
+                  href={`/movie/${m.id}`}
+                  className="rounded-xl border bg-white overflow-hidden block hover:shadow-md transition"
                 >
                   <div className="aspect-[2/3] bg-gray-100">
                     {m.poster_path ? (
@@ -145,7 +140,11 @@ export const SearchAndGenreSection = ({
                         src={`https://image.tmdb.org/t/p/w500${m.poster_path}`}
                         alt={m.title}
                       />
-                    ) : null}
+                    ) : (
+                      <div className="w-full h-full grid place-items-center text-sm text-gray-500">
+                        No poster
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-3">
@@ -157,12 +156,11 @@ export const SearchAndGenreSection = ({
                       {m.title}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
 
-          {/* Pagination */}
           <div className="flex items-center justify-center gap-4 mt-10">
             <button
               className="px-3 py-2 rounded-md border disabled:opacity-40"
@@ -184,42 +182,34 @@ export const SearchAndGenreSection = ({
           </div>
         </div>
 
-        {/* RIGHT: GENRE */}
         <aside className="border-l pl-6">
           <h2 className="text-xl font-bold mb-1">Search by genre</h2>
           <p className="text-gray-600 mb-4">See lists of movies by genre</p>
 
           <div className="flex flex-wrap gap-2">
+            <Link
+              href="/discover"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm bg-gray-50 hover:bg-gray-100"
+            >
+              All <ChevronRight className="size-4" />
+            </Link>
+
             {genres.map((g) => (
-              <button
+              <Link
                 key={g.id}
-                onClick={() => setSelectedGenre(g)}
+                href={`/discover?genre=${g.id}&name=${encodeURIComponent(g.name)}`}
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm transition
                   ${
-                    selectedGenre?.id === g.id
+                    genreId === g.id
                       ? "bg-black text-white"
                       : "bg-gray-50 hover:bg-gray-100"
                   }`}
               >
                 {g.name}
                 <ChevronRight className="size-4" />
-              </button>
+              </Link>
             ))}
           </div>
-
-          {selectedGenre && !isSearching && (
-            <button
-              onClick={() => setSelectedGenre(null)}
-              className="mt-4 text-sm underline text-gray-600"
-            >
-              Clear genre
-            </button>
-          )}
-
-          {/* Хэрвээ Search бичсэн үед genre дархад жанр шууд ажиллахыг хүсвэл:
-              - Header дээр query-г set хийх state-г энэ компонент руу өргөж,
-              - Genre дархад query-г "" болгоод genre-г ажиллуулна.
-          */}
         </aside>
       </div>
     </div>

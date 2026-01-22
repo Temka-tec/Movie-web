@@ -9,10 +9,7 @@ type MovieCardProps = {
 
 export const MovieCard = ({ movie }: MovieCardProps) => {
   return (
-    <Link
-      href={`/movie/${movie.id}`}
-      className="inline-block cursor-pointer"
-    >
+    <Link href={`/movie/${movie.id}`} className="inline-block cursor-pointer">
       <img
         src={"https://image.tmdb.org/t/p/w500" + movie.poster_path}
         className="w-full aspect-[2/3] rounded-t-md object-cover"
