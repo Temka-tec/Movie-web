@@ -3,6 +3,7 @@
 import { Film, Sun, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ModeToggle } from "./ModeToggle";
 
 type Genre = { id: number; name: string };
 
@@ -59,7 +60,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b">
+    <header className="sticky top-0 z-50 bg-muted border-b">
       <div className="h-[59px] flex items-center justify-between px-6">
         <div className="flex items-center gap-2">
           <Film className="text-indigo-700" />
@@ -70,17 +71,17 @@ export const Header = () => {
           <div className="relative">
             <button
               onClick={() => setOpenGenre((v) => !v)}
-              className="h-10 px-3 rounded-md border flex items-center gap-2 text-sm bg-white"
+              className="h-10 px-3 rounded-md border flex items-center gap-2 text-sm bg-muted"
             >
               <span>{selected ? selected.name : "Genre"}</span>
               <ChevronDown className="size-4 opacity-70" />
             </button>
 
             {openGenre && (
-              <div className="absolute mt-2 w-64 rounded-xl border bg-white shadow-lg p-2 z-50">
+              <div className="absolute mt-2 w-64 rounded-xl border bg-muted shadow-lg p-2 z-50">
                 <button
                   onClick={() => pickGenre(null)}
-                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted text-sm"
                 >
                   All
                 </button>
@@ -90,7 +91,7 @@ export const Header = () => {
                     <button
                       key={g.id}
                       onClick={() => pickGenre(g)}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted bg-muted text-sm"
                     >
                       {g.name}
                     </button>
@@ -109,7 +110,7 @@ export const Header = () => {
         </div>
 
         <button className="h-10 w-10 rounded-md border grid place-items-center">
-          <Sun className="size-5" />
+          <ModeToggle />
         </button>
       </div>
     </header>

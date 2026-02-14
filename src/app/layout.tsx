@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="white">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <ThemeProvider attribute="class" defaultTheme="light">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <Suspense fallback={null}>
             <Header />
           </Suspense>

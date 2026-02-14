@@ -3,7 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Star, Play } from "lucide-react";
+import { Star, Play, ImageOff, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 type TMDBVideo = { key: string; site: string; type: string; name: string };
 
@@ -44,6 +45,85 @@ const minutesToHM = (mins?: number) => {
   return `${h}h ${m}m`;
 };
 
+const MovieDetailSkeleton = () => {
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="flex items-start justify-between gap-6">
+        <div className="w-full">
+          <div className="h-12 w-2/3 bg-gray-200 rounded animate-pulse" />
+          <div className="mt-3 h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+        </div>
+
+        <div className="w-40">
+          <div className="h-4 w-16 bg-gray-200 rounded animate-pulse ml-auto" />
+          <div className="mt-2 h-8 w-28 bg-gray-200 rounded animate-pulse ml-auto" />
+          <div className="mt-2 h-3 w-20 bg-gray-200 rounded animate-pulse ml-auto" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-12 gap-6 mt-8">
+        <div className="col-span-12 md:col-span-4">
+          <div className="w-full aspect-[2/3] bg-gray-200 rounded-xl animate-pulse" />
+        </div>
+
+        <div className="col-span-12 md:col-span-8">
+          <div className="w-full aspect-[16/9] md:aspect-auto md:h-full bg-gray-200 rounded-xl animate-pulse" />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mt-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="h-7 w-24 bg-gray-200 rounded-full animate-pulse"
+          />
+        ))}
+      </div>
+
+      <div className="mt-6 space-y-3">
+        <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-11/12 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-10/12 bg-gray-200 rounded animate-pulse" />
+      </div>
+
+      <div className="mt-10 border-t pt-6 space-y-5">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className={`grid grid-cols-12 gap-4 ${i ? "border-t pt-5" : ""}`}
+          >
+            <div className="col-span-12 md:col-span-2 h-4 w-24 bg-gray-200 rounded animate-pulse" />
+            <div className="col-span-12 md:col-span-10 h-4 w-2/3 bg-gray-200 rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-12">
+        <div className="flex items-center justify-between mb-5">
+          <div className="h-7 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-5 w-28 bg-gray-200 rounded animate-pulse" />
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-xl border bg-muted overflow-hidden animate-pulse"
+            >
+              <div className="aspect-[2/3] bg-gray-200" />
+              <div className="p-3">
+                <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
+                <div className="h-4 w-3/4 bg-gray-200 rounded mb-2" />
+                <div className="h-4 w-1/2 bg-gray-200 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function MovieDetailPage({
   params,
 }: {
@@ -53,21 +133,21 @@ export default function MovieDetailPage({
 
   const [movie, setMovie] = useState<any | null>(null);
   const [credits, setCredits] = useState<CreditsResponse | null>(null);
-
   const [similar, setSimilar] = useState<MovieCard[]>([]);
+  const [loadingPage, setLoadingPage] = useState(true);
 
   const [openTrailer, setOpenTrailer] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [loadingTrailer, setLoadingTrailer] = useState(false);
 
   const BASE = process.env.NEXT_PUBLIC_TMDB_BASE_URL;
-  const IMG = process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL; // https://image.tmdb.org/t/p/
+  const IMG = process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL;
   const TOKEN = process.env.NEXT_PUBLIC_TMDB_API_TOKEN;
 
-  // fetch detail + credits + similar
   useEffect(() => {
     if (!BASE || !TOKEN) {
       console.error("Missing env", { BASE, TOKEN });
+      setLoadingPage(false);
       return;
     }
 
@@ -77,21 +157,31 @@ export default function MovieDetailPage({
     };
 
     const fetchAll = async () => {
-      const [movieRes, creditsRes, similarRes] = await Promise.all([
-        fetch(`${BASE}/movie/${movieId}?language=en-US`, { headers }),
-        fetch(`${BASE}/movie/${movieId}/credits?language=en-US`, { headers }),
-        fetch(`${BASE}/movie/${movieId}/similar?language=en-US&page=1`, {
-          headers,
-        }),
-      ]);
+      setLoadingPage(true);
+      try {
+        const [movieRes, creditsRes, similarRes] = await Promise.all([
+          fetch(`${BASE}/movie/${movieId}?language=en-US`, { headers }),
+          fetch(`${BASE}/movie/${movieId}/credits?language=en-US`, { headers }),
+          fetch(`${BASE}/movie/${movieId}/similar?language=en-US&page=1`, {
+            headers,
+          }),
+        ]);
 
-      const movieData = await movieRes.json();
-      const creditsData = await creditsRes.json();
-      const similarData: TMDBListResponse = await similarRes.json();
+        const movieData = await movieRes.json();
+        const creditsData = await creditsRes.json();
+        const similarData: TMDBListResponse = await similarRes.json();
 
-      setMovie(movieData);
-      setCredits(creditsData);
-      setSimilar((similarData?.results ?? []).slice(0, 8));
+        setMovie(movieData);
+        setCredits(creditsData);
+        setSimilar((similarData?.results ?? []).slice(0, 8));
+      } catch (e) {
+        console.error(e);
+        setMovie(null);
+        setCredits(null);
+        setSimilar([]);
+      } finally {
+        setLoadingPage(false);
+      }
     };
 
     fetchAll();
@@ -177,11 +267,12 @@ export default function MovieDetailPage({
     }
   };
 
-  if (!movie) return <div className="p-10">Loading...</div>;
+  if (loadingPage) return <MovieDetailSkeleton />;
+
+  if (!movie) return <div className="p-10">Not found</div>;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-10">
-      {/* Top row: Title + Rating */}
       <div className="flex items-start justify-between gap-6">
         <div>
           <h1 className="text-5xl font-bold leading-tight">{movie.title}</h1>
@@ -210,7 +301,6 @@ export default function MovieDetailPage({
         </div>
       </div>
 
-      {/* Poster + Trailer backdrop */}
       <div className="grid grid-cols-12 gap-6 mt-8">
         <div className="col-span-12 md:col-span-4">
           <img
@@ -248,7 +338,6 @@ export default function MovieDetailPage({
         </div>
       </div>
 
-      {/* Genres */}
       <div className="flex flex-wrap gap-2 mt-6">
         {(movie.genres ?? []).slice(0, 10).map((g: any) => (
           <Badge key={g.id} variant="secondary" className="rounded-full">
@@ -257,12 +346,10 @@ export default function MovieDetailPage({
         ))}
       </div>
 
-      {/* Overview */}
       <p className="mt-6 text-lg leading-7 text-muted-foreground">
         {movie.overview}
       </p>
 
-      {/* Credits */}
       <div className="mt-10 border-t pt-6 space-y-5">
         <div className="grid grid-cols-12 gap-4">
           <p className="col-span-12 md:col-span-2 font-semibold">Director</p>
@@ -286,11 +373,12 @@ export default function MovieDetailPage({
         </div>
       </div>
 
-      {/* More like this */}
       <div className="mt-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-2xl font-bold">More like this</h2>
-          <span className="text-sm text-muted-foreground">See more →</span>
+          <Button variant="link" className="text-sm text-muted-foreground">
+            See more <ArrowRight />
+          </Button>
         </div>
 
         {similar.length === 0 ? (
@@ -301,7 +389,7 @@ export default function MovieDetailPage({
               <Link
                 key={m.id}
                 href={`/movie/${m.id}`}
-                className="rounded-xl border bg-white overflow-hidden block hover:shadow-md transition"
+                className="rounded-xl border bg-muted overflow-hidden block hover:shadow-md transition"
               >
                 <div className="aspect-[2/3] bg-gray-100">
                   {m.poster_path ? (
@@ -309,10 +397,11 @@ export default function MovieDetailPage({
                       className="w-full h-full object-cover"
                       src={`${IMG}w500${m.poster_path}`}
                       alt={m.title}
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full grid place-items-center text-sm text-gray-500">
-                      No poster
+                      <ImageOff />
                     </div>
                   )}
                 </div>
@@ -330,7 +419,6 @@ export default function MovieDetailPage({
         )}
       </div>
 
-      {/* Trailer dialog */}
       <Dialog
         open={openTrailer}
         onOpenChange={(v) => {

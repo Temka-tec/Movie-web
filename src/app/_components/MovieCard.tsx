@@ -1,30 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { ImageOff } from "lucide-react";
 
 type MovieCardProps = {
   movie: MovieProps;
 };
 
+const IMG = process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL;
+
 export const MovieCard = ({ movie }: MovieCardProps) => {
   return (
-    <Link href={`/movie/${movie.id}`} className="inline-block cursor-pointer">
-      <img
-        src={"https://image.tmdb.org/t/p/w500" + movie.poster_path}
-        className="w-full aspect-[2/3] rounded-t-md object-cover"
-        alt={movie.title || movie.original_title}
-      />
+    <Link
+      href={`/movie/${movie.id}`}
+      className="rounded-xl border bg-muted overflow-hidden block hover:shadow-md transition"
+    >
+      <div className="aspect-[2/3] bg-muted">
+        {movie.poster_path ? (
+          <img
+            className="w-full h-full object-cover"
+            src={`${IMG}w500${movie.poster_path}`}
+            alt={movie.title || movie.original_title}
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full grid place-items-center text-sm text-gray-500">
+            <ImageOff />
+          </div>
+        )}
+      </div>
 
-      <div className="w-full h-[100px] pl-3 bg-gray-100 rounded-b-lg">
-        <div className="flex gap-2 items-center pt-4">
-          <Star className="text-[#FDE047] size-4" />
-          <p className="text-[16px] leading-5 font-medium">
-            {movie.vote_average}
-          </p>
+      <div className="p-3">
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <span>⭐</span>
+          <span>{(movie.vote_average ?? 0).toFixed(1)}/10</span>
         </div>
 
-        <p className="text-[20px] leading-7 font-normal line-clamp-2">
+        <p className="font-medium text-sm line-clamp-2">
           {movie.title || movie.original_title}
         </p>
       </div>

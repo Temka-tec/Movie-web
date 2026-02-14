@@ -9,14 +9,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
 import { Introducton } from "./Introductun";
 
 type TMDBVideo = {
@@ -26,8 +24,31 @@ type TMDBVideo = {
   name: string;
 };
 
+const HeadSlideSkeleton = () => {
+  return (
+    <CarouselItem className="relative h-full">
+      <Card className="py-0 rounded-none w-full">
+        <CardContent className="p-0 relative">
+          {/* backdrop skeleton */}
+          <div className="w-full aspect-[5/2] bg-gray-200 animate-pulse" />
+
+          {/* overlay skeleton (Introducton байрлалтай тааруулж absolute) */}
+          <div className="absolute left-0 right-0 bottom-0 p-6 md:p-10">
+            <div className="w-32 h-4 bg-gray-200 rounded animate-pulse mb-3" />
+            <div className="w-2/3 h-8 bg-gray-200 rounded animate-pulse mb-3" />
+            <div className="w-24 h-4 bg-gray-200 rounded animate-pulse mb-4" />
+            <div className="w-full max-w-xl h-16 bg-gray-200 rounded animate-pulse mb-5" />
+            <div className="w-40 h-10 bg-gray-200 rounded animate-pulse" />
+          </div>
+        </CardContent>
+      </Card>
+    </CarouselItem>
+  );
+};
+
 export const HeadForMovie = () => {
   const [movies, setMovies] = useState<MovieProps[]>([]);
+  const [loadingMovies, setLoadingMovies] = useState(true);
 
   const [open, setOpen] = useState(false);
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
@@ -36,18 +57,33 @@ export const HeadForMovie = () => {
 
   useEffect(() => {
     async function fetchMovies() {
-      const res = await fetch(
-        `https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_TOKEN}`,
-            accept: "application/json",
+      setLoadingMovies(true);
+      try {
+        const res = await fetch(
+          `https://api.themoviedb.org/3/movie/now_playing?language=en-US&page=1`,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_TOKEN}`,
+              accept: "application/json",
+            },
           },
-        },
-      );
-      const data = await res.json();
-      setMovies(data.results.slice(0, 3));
+        );
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`TMDB error ${res.status}: ${text}`);
+        }
+
+        const data = await res.json();
+        setMovies((data.results || []).slice(0, 3));
+      } catch (e) {
+        console.error(e);
+        setMovies([]);
+      } finally {
+        setLoadingMovies(false);
+      }
     }
+
     fetchMovies();
   }, []);
 
@@ -67,6 +103,11 @@ export const HeadForMovie = () => {
         },
       );
 
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`TMDB error ${res.status}: ${text}`);
+      }
+
       const data: { results: TMDBVideo[] } = await res.json();
 
       const trailer =
@@ -74,15 +115,11 @@ export const HeadForMovie = () => {
           (v) => v.site === "YouTube" && v.type === "Trailer",
         ) ?? data.results.find((v) => v.site === "YouTube");
 
-      if (!trailer) {
-        setOpen(true);
-        return;
-      }
-
-      setTrailerKey(trailer.key);
+      setTrailerKey(trailer?.key ?? null);
       setOpen(true);
     } catch (e) {
       console.error(e);
+      setTrailerKey(null);
       setOpen(true);
     } finally {
       setLoadingTrailer(false);
@@ -93,33 +130,38 @@ export const HeadForMovie = () => {
     <>
       <Carousel>
         <CarouselContent>
-          {movies.map((movie, index) => (
-            <CarouselItem key={index} className="relative h-full">
-              <Card className="py-0 rounded-none w-full">
-                <CardContent className="p-0">
-                  <img
-                    className="w-full aspect-[5/2] object-cover object-center"
-                    src={
-                      "https://image.tmdb.org/t/p/original" +
-                      movie.backdrop_path
-                    }
-                    alt={movie.title}
-                  />
+          {loadingMovies
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <HeadSlideSkeleton key={i} />
+              ))
+            : movies.map((movie) => (
+                <CarouselItem key={movie.id} className="relative h-full">
+                  <Card className="py-0 rounded-none w-full">
+                    <CardContent className="p-0">
+                      <img
+                        className="w-full aspect-[5/2] object-cover object-center"
+                        src={
+                          "https://image.tmdb.org/t/p/original" +
+                          movie.backdrop_path
+                        }
+                        alt={movie.title}
+                        loading="lazy"
+                      />
 
-                  <Introducton
-                    name="Now Playing:"
-                    moviename={movie.title}
-                    rating={movie.vote_average}
-                    description={movie.overview}
-                    btn={loadingTrailer ? "Loading..." : "Watch Trailer"}
-                    onWatchTrailer={() =>
-                      handleWatchTrailer(movie.id, movie.title)
-                    }
-                  />
-                </CardContent>
-              </Card>
-            </CarouselItem>
-          ))}
+                      <Introducton
+                        name="Now Playing:"
+                        moviename={movie.title}
+                        rating={movie.vote_average}
+                        description={movie.overview}
+                        btn={loadingTrailer ? "Loading..." : "Watch Trailer"}
+                        onWatchTrailer={() =>
+                          handleWatchTrailer(movie.id, movie.title)
+                        }
+                      />
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
         </CarouselContent>
 
         <CarouselNext className="w-fit h-fit p-4 rounded-full bg-[#F4F4F5] absolute right-6" />

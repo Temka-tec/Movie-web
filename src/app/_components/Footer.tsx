@@ -21,7 +21,7 @@ export const Footer = () => {
                 <span>Email: support@movieZ.com</span>
               </p>
               <p className="flex gap-2 items-center">
-                <Phone /> <span>Phone: +976 (11) 123-4567</span>
+                <Phone /> <span>Phone: +976 99110010</span>
               </p>
             </div>
           </div>
@@ -33,7 +33,7 @@ export const Footer = () => {
                 Facebook
               </a>
               <a href="#" className="hover:underline">
-                Instagramb
+                Instagram
               </a>
               <a href="#" className="hover:underline">
                 Twitter

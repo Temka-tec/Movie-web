@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ImageOff } from "lucide-react";
 import Link from "next/link";
 
 type Genre = { id: number; name: string };
@@ -19,6 +19,20 @@ type TMDBListResponse = {
   total_pages: number;
   total_results: number;
   results: Movie[];
+};
+
+const DiscoverCardSkeleton = () => {
+  return (
+    <div className="rounded-xl border bg-muted overflow-hidden block">
+      <div className="aspect-[2/3] bg-gray-200 animate-pulse" />
+
+      <div className="p-3">
+        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mb-2" />
+        <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse mb-2" />
+        <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse" />
+      </div>
+    </div>
+  );
 };
 
 export const SearchAndGenreSection = () => {
@@ -82,11 +96,6 @@ export const SearchAndGenreSection = () => {
           },
         });
 
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`TMDB error ${res.status}: ${text}`);
-        }
-
         const data: TMDBListResponse = await res.json();
         setMovies(data.results || []);
         setTotalPages(Math.min(data.total_pages || 1, 500));
@@ -122,7 +131,11 @@ export const SearchAndGenreSection = () => {
           <p className="text-gray-600 mb-6">{subTitle}</p>
 
           {loading ? (
-            <div className="text-gray-600">Loading...</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <DiscoverCardSkeleton key={i} />
+              ))}
+            </div>
           ) : movies.length === 0 ? (
             <div className="text-gray-600">No results</div>
           ) : (
@@ -131,7 +144,7 @@ export const SearchAndGenreSection = () => {
                 <Link
                   key={m.id}
                   href={`/movie/${m.id}`}
-                  className="rounded-xl border bg-white overflow-hidden block hover:shadow-md transition"
+                  className="rounded-xl border bg-muted overflow-hidden block hover:shadow-md transition"
                 >
                   <div className="aspect-[2/3] bg-gray-100">
                     {m.poster_path ? (
@@ -142,7 +155,7 @@ export const SearchAndGenreSection = () => {
                       />
                     ) : (
                       <div className="w-full h-full grid place-items-center text-sm text-gray-500">
-                        No poster
+                        <ImageOff />
                       </div>
                     )}
                   </div>
@@ -160,26 +173,6 @@ export const SearchAndGenreSection = () => {
               ))}
             </div>
           )}
-
-          <div className="flex items-center justify-center gap-4 mt-10">
-            <button
-              className="px-3 py-2 rounded-md border disabled:opacity-40"
-              disabled={page <= 1 || loading}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              ‹ Previous
-            </button>
-
-            <div className="px-3 py-2 rounded-md border bg-white">{page}</div>
-
-            <button
-              className="px-3 py-2 rounded-md border disabled:opacity-40"
-              disabled={page >= totalPages || loading}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Next ›
-            </button>
-          </div>
         </div>
 
         <aside className="border-l pl-6">
@@ -189,7 +182,7 @@ export const SearchAndGenreSection = () => {
           <div className="flex flex-wrap gap-2">
             <Link
               href="/discover"
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm bg-gray-50 hover:bg-gray-100"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm bg-muted hover:bg-muted"
             >
               All <ChevronRight className="size-4" />
             </Link>
@@ -198,12 +191,11 @@ export const SearchAndGenreSection = () => {
               <Link
                 key={g.id}
                 href={`/discover?genre=${g.id}&name=${encodeURIComponent(g.name)}`}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm transition
-                  ${
-                    genreId === g.id
-                      ? "bg-black text-white"
-                      : "bg-gray-50 hover:bg-gray-100"
-                  }`}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm transition ${
+                  genreId === g.id
+                    ? "bg-white text-black"
+                    : "bg-muted hover:bg-muted"
+                }`}
               >
                 {g.name}
                 <ChevronRight className="size-4" />
