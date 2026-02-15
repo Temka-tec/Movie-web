@@ -7,7 +7,9 @@ type MovieCardProps = {
   movie: MovieProps;
 };
 
-const IMG = process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL;
+const IMG =
+  process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL ||
+  "https://image.tmdb.org/t/p/";
 
 export const MovieCard = ({ movie }: MovieCardProps) => {
   return (
@@ -20,8 +22,9 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
           <img
             className="w-full h-full object-cover"
             src={`${IMG}w500${movie.poster_path}`}
-            alt={movie.title || movie.original_title}
+            alt={movie.title || movie.original_title || "movie poster"}
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="w-full h-full grid place-items-center text-sm text-gray-500">
