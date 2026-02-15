@@ -75,12 +75,9 @@ export const MovieSection = (props: MovieSectionProps) => {
           {categoryName.replace("_", " ")}
         </h2>
 
-        <div className="flex gap-1 items-center cursor-pointer">
-          <Link
-            href={`/category/${categoryName}`}
-            className="text-[#09090B] hover:underline text-xl"
-          >
-            See More
+        <div className=" flex gap-1 items-center cursor-pointer ">
+          <Link href={`/category/${categoryName}`}>
+            <Button variant="link">See more</Button>
           </Link>
           <ArrowRight className="size-4" />
         </div>

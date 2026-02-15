@@ -29,10 +29,8 @@ const HeadSlideSkeleton = () => {
     <CarouselItem className="relative h-full">
       <Card className="py-0 rounded-none w-full">
         <CardContent className="p-0 relative">
-          {/* backdrop skeleton */}
           <div className="w-full aspect-[5/2] bg-gray-200 animate-pulse" />
 
-          {/* overlay skeleton (Introducton байрлалтай тааруулж absolute) */}
           <div className="absolute left-0 right-0 bottom-0 p-6 md:p-10">
             <div className="w-32 h-4 bg-gray-200 rounded animate-pulse mb-3" />
             <div className="w-2/3 h-8 bg-gray-200 rounded animate-pulse mb-3" />
