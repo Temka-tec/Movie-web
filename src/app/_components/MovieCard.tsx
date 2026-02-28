@@ -2,29 +2,33 @@
 
 import Link from "next/link";
 import { ImageOff } from "lucide-react";
+import { useState } from "react";
 
 type MovieCardProps = {
   movie: MovieProps;
 };
 
-const IMG =
-  process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL ||
-  "https://image.tmdb.org/t/p/";
-
 export const MovieCard = ({ movie }: MovieCardProps) => {
+  const [imgError, setImgError] = useState(false);
+
+  const posterUrl = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    : null;
+
   return (
     <Link
       href={`/movie/${movie.id}`}
       className="rounded-xl border bg-muted overflow-hidden block hover:shadow-md transition"
     >
       <div className="aspect-[2/3] bg-muted">
-        {movie.poster_path ? (
+        {posterUrl && !imgError ? (
           <img
             className="w-full h-full object-cover"
-            src={`${IMG}w500${movie.poster_path}`}
+            src={posterUrl}
             alt={movie.title || movie.original_title || "movie poster"}
             loading="lazy"
             decoding="async"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full grid place-items-center text-sm text-gray-500">
