@@ -26,21 +26,25 @@ type MovieSectionProps = {
 };
 
 const SkeletonCard = () => (
-  <div className="inline-block w-full">
-    <div className="w-full aspect-[2/3] rounded-t-md bg-gray-200 animate-pulse" />
-    <div className="w-full h-[100px] pl-3 bg-gray-100 rounded-b-lg">
-      <div className="flex gap-2 items-center pt-4">
+  <div className="w-full h-full overflow-hidden rounded-xl border bg-muted">
+    <div className="w-full aspect-[2/3] bg-gray-200 animate-pulse" />
+    <div className="flex min-h-[88px] flex-col justify-between p-3">
+      <div className="flex gap-2 items-center">
         <div className="size-4 rounded bg-gray-200 animate-pulse" />
         <div className="h-[16px] w-10 rounded bg-gray-200 animate-pulse" />
       </div>
-      <div className="mt-2 h-[20px] w-3/4 rounded bg-gray-200 animate-pulse" />
-      <div className="mt-2 h-[20px] w-1/2 rounded bg-gray-200 animate-pulse" />
+      <div>
+        <div className="mt-2 h-[20px] w-3/4 rounded bg-gray-200 animate-pulse" />
+        <div className="mt-2 h-[20px] w-1/2 rounded bg-gray-200 animate-pulse" />
+      </div>
     </div>
   </div>
 );
 
 export const MovieSection = (props: MovieSectionProps) => {
   const { categoryName, title = "", showButton } = props;
+  const showPagination = !showButton;
+  const pageSize = showPagination ? 15 : 10;
 
   const [movies, setMovies] = useState<MovieProps[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -139,43 +143,54 @@ export const MovieSection = (props: MovieSectionProps) => {
         <div className="w-full mb-4 text-sm text-red-600">{errorText}</div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 items-start">
+      <div
+        className={`grid gap-6 items-start ${
+          showPagination
+            ? "grid-cols-2 md:grid-cols-5"
+            : "grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5"
+        }`}
+      >
         {loading
-          ? Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)
-          : movies
-              .slice(0, 10)
-              .map((movie) => <MovieCard key={movie.id} movie={movie} />)}
+          ? Array.from({ length: pageSize }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))
+          : (showPagination
+              ? movies.slice(0, pageSize)
+              : movies.slice(0, 10)
+            ).map((movie) => <MovieCard key={movie.id} movie={movie} />)}
       </div>
 
-      <div className="flex justify-end mt-4 bg-muted">
-        <Pagination className="w-fit m-0">
-          <PaginationContent>
-            <PaginationItem>
-              <Button
-                onClick={prevPage}
-                disabled={currentPage === 1 || loading}
-              >
-                <ChevronLeft />
-                Previous
-              </Button>
-            </PaginationItem>
+      {showPagination && (
+        <div className="flex justify-end mt-4 bg-muted">
+          <Pagination className="w-fit m-0">
+            <PaginationContent>
+              <PaginationItem>
+                <Button
+                  onClick={prevPage}
+                  disabled={currentPage === 1 || loading}
+                >
+                  <ChevronLeft />
+                  Previous
+                </Button>
+              </PaginationItem>
 
-            <PaginationItem>
-              <Button disabled>{currentPage}</Button>
-            </PaginationItem>
+              <PaginationItem>
+                <Button disabled>{currentPage}</Button>
+              </PaginationItem>
 
-            <PaginationItem>
-              <Button
-                onClick={nextPage}
-                disabled={currentPage === totalPages || loading}
-              >
-                <ChevronRight />
-                Next
-              </Button>
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+              <PaginationItem>
+                <Button
+                  onClick={nextPage}
+                  disabled={currentPage === totalPages || loading}
+                >
+                  <ChevronRight />
+                  Next
+                </Button>
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 };
