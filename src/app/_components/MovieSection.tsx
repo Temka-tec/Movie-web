@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/pagination";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TMDB_BASE_URL, TMDB_TOKEN } from "@/lib/tmdb";
 
 type MovieSectionProps = {
   categoryName:
@@ -47,8 +48,8 @@ export const MovieSection = (props: MovieSectionProps) => {
   const [loading, setLoading] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  const baseUrl = process.env.NEXT_PUBLIC_TMDB_BASE_URL;
-  const token = process.env.NEXT_PUBLIC_TMDB_API_TOKEN;
+  const baseUrl = TMDB_BASE_URL;
+  const token = TMDB_TOKEN;
 
   const endpoint = useMemo(() => {
     const map: Record<string, string> = {
@@ -75,7 +76,6 @@ export const MovieSection = (props: MovieSectionProps) => {
       setErrorText(null);
 
       try {
-        if (!baseUrl) throw new Error("NEXT_PUBLIC_TMDB_BASE_URL is missing");
         if (!token) throw new Error("NEXT_PUBLIC_TMDB_API_TOKEN is missing");
 
         const url = `${baseUrl}${endpoint}?language=en-US&page=${currentPage}`;
@@ -119,10 +119,6 @@ export const MovieSection = (props: MovieSectionProps) => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
-
-  console.log("BASE:", process.env.NEXT_PUBLIC_TMDB_BASE_URL);
-  console.log("TOKEN:", process.env.NEXT_PUBLIC_TMDB_API_TOKEN);
-  console.log("ENDPOINT:", endpoint);
 
   return (
     <div className="w-full flex flex-col items-center px-20 pb-8">

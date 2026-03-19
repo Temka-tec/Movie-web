@@ -12,6 +12,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  TMDB_BASE_URL,
+  TMDB_IMAGE_BASE_URL,
+  TMDB_TOKEN,
+} from "@/lib/tmdb";
 
 type TMDBVideo = { key: string; site: string; type: string; name: string };
 
@@ -140,13 +145,13 @@ export default function MovieDetailPage({
   const [trailerKey, setTrailerKey] = useState<string | null>(null);
   const [loadingTrailer, setLoadingTrailer] = useState(false);
 
-  const BASE = process.env.NEXT_PUBLIC_TMDB_BASE_URL;
-  const IMG = process.env.NEXT_PUBLIC_TMDB_IMAGE_SERVICE_URL;
-  const TOKEN = process.env.NEXT_PUBLIC_TMDB_API_TOKEN;
+  const BASE = TMDB_BASE_URL;
+  const IMG = TMDB_IMAGE_BASE_URL;
+  const TOKEN = TMDB_TOKEN;
 
   useEffect(() => {
-    if (!BASE || !TOKEN) {
-      console.error("Missing env", { BASE, TOKEN });
+    if (!TOKEN) {
+      console.error("Missing env", { TOKEN });
       setLoadingPage(false);
       return;
     }

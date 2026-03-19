@@ -38,7 +38,7 @@ const HomePage = () => {
         `https://api.themoviedb.org/3/movie/upcoming?language=en-US&page=1`,
         {
           headers: {
-            Authorization: 'Bearer ${process.env.TMDB_ACCESS_TOKEN}',
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_TMDB_API_TOKEN}`,
             accept: "application/json",
           },
         }
