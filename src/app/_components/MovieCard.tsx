@@ -36,13 +36,13 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
         )}
       </div>
 
-      <div className="flex min-h-[88px] flex-1 flex-col justify-between p-3">
+      <div className="flex min-h-[96px] flex-1 flex-col justify-between p-3">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
           <span>⭐</span>
           <span>{(movie.vote_average ?? 0).toFixed(1)}/10</span>
         </div>
 
-        <p className="font-medium text-sm line-clamp-2 min-h-[40px]">
+        <p className="min-h-[40px] font-medium text-sm line-clamp-2">
           {movie.title || movie.original_title}
         </p>
       </div>
