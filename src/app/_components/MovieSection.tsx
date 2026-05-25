@@ -142,7 +142,6 @@ export const MovieSection = (props: MovieSectionProps) => {
         <div className="w-full mb-4 text-sm text-red-600">{errorText}</div>
       )}
 
-      {/* Movie Grid — always 2 cols mobile, 5 cols desktop */}
       <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-4">
         {loading
           ? Array.from({ length: pageSize }).map((_, i) => (
@@ -153,7 +152,6 @@ export const MovieSection = (props: MovieSectionProps) => {
               .map((movie) => <MovieCard key={movie.id} movie={movie} />)}
       </div>
 
-      {/* Pagination — only on category pages */}
       {showPagination && (
         <div className="flex justify-end w-full mt-6">
           <Pagination className="w-fit m-0">
