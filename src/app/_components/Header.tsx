@@ -109,9 +109,7 @@ export const Header = () => {
           />
         </div>
 
-        <button className="h-10 w-10 rounded-md border grid place-items-center">
-          <ModeToggle />
-        </button>
+        <ModeToggle />
       </div>
     </header>
   );

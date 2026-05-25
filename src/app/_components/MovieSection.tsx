@@ -26,16 +26,16 @@ type MovieSectionProps = {
 };
 
 const SkeletonCard = () => (
-  <div className="w-full h-full overflow-hidden rounded-xl border bg-muted">
+  <div className="w-full overflow-hidden rounded-xl border bg-muted">
     <div className="w-full aspect-[2/3] bg-gray-200 animate-pulse" />
     <div className="flex min-h-[88px] flex-col justify-between p-3">
       <div className="flex gap-2 items-center">
         <div className="size-4 rounded bg-gray-200 animate-pulse" />
-        <div className="h-[16px] w-10 rounded bg-gray-200 animate-pulse" />
+        <div className="h-4 w-10 rounded bg-gray-200 animate-pulse" />
       </div>
       <div>
-        <div className="mt-2 h-[20px] w-3/4 rounded bg-gray-200 animate-pulse" />
-        <div className="mt-2 h-[20px] w-1/2 rounded bg-gray-200 animate-pulse" />
+        <div className="mt-2 h-4 w-3/4 rounded bg-gray-200 animate-pulse" />
+        <div className="mt-2 h-4 w-1/2 rounded bg-gray-200 animate-pulse" />
       </div>
     </div>
   </div>
@@ -44,7 +44,7 @@ const SkeletonCard = () => (
 export const MovieSection = (props: MovieSectionProps) => {
   const { categoryName, title = "", showButton } = props;
   const showPagination = !showButton;
-  const pageSize = showPagination ? 15 : 10;
+  const pageSize = 10;
 
   const [movies, setMovies] = useState<MovieProps[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,9 +85,7 @@ export const MovieSection = (props: MovieSectionProps) => {
         const url = `${baseUrl}${endpoint}?language=en-US&page=${currentPage}`;
 
         const res = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
           signal: controller.signal,
         });
@@ -115,7 +113,6 @@ export const MovieSection = (props: MovieSectionProps) => {
     };
 
     fetchData();
-
     return () => controller.abort();
   }, [baseUrl, token, endpoint, currentPage]);
 
@@ -125,17 +122,19 @@ export const MovieSection = (props: MovieSectionProps) => {
   const prevPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
 
   return (
-    <div className="w-full flex flex-col items-center px-20 pb-8">
+    <div className="w-full flex flex-col items-center px-6 md:px-10 lg:px-20 pb-8">
+      {/* Section Header */}
       <div className="w-full flex justify-between items-center mt-10 mb-5">
-        <h2 className="text-4xl font-bold capitalize">{sectionTitle}</h2>
+        <h2 className="text-2xl font-bold capitalize">{sectionTitle}</h2>
 
         {showButton && (
-          <div className="flex gap-1 items-center cursor-pointer">
-            <Link href={`/category/${categoryName}`}>
-              <Button variant="link">See more</Button>
-            </Link>
+          <Link
+            href={`/category/${categoryName}`}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition"
+          >
+            See more
             <ArrowRight className="size-4" />
-          </div>
+          </Link>
         )}
       </div>
 
@@ -143,48 +142,47 @@ export const MovieSection = (props: MovieSectionProps) => {
         <div className="w-full mb-4 text-sm text-red-600">{errorText}</div>
       )}
 
-      <div
-        className={`grid gap-6 items-start ${
-          showPagination
-            ? "grid-cols-2 md:grid-cols-5"
-            : "grid-cols-2 sm:grid-cols- md:grid-cols-4 lg:grid-cols-5"
-        }`}
-      >
+      {/* Movie Grid — always 2 cols mobile, 5 cols desktop */}
+      <div className="w-full grid grid-cols-2 md:grid-cols-5 gap-4">
         {loading
           ? Array.from({ length: pageSize }).map((_, i) => (
               <SkeletonCard key={i} />
             ))
-          : (showPagination
-              ? movies.slice(0, pageSize)
-              : movies.slice(0, 10)
-            ).map((movie) => <MovieCard key={movie.id} movie={movie} />)}
+          : movies
+              .slice(0, pageSize)
+              .map((movie) => <MovieCard key={movie.id} movie={movie} />)}
       </div>
 
+      {/* Pagination — only on category pages */}
       {showPagination && (
-        <div className="flex justify-end mt-4 bg-muted">
+        <div className="flex justify-end w-full mt-6">
           <Pagination className="w-fit m-0">
             <PaginationContent>
               <PaginationItem>
                 <Button
+                  variant="outline"
                   onClick={prevPage}
                   disabled={currentPage === 1 || loading}
                 >
-                  <ChevronLeft />
+                  <ChevronLeft className="size-4" />
                   Previous
                 </Button>
               </PaginationItem>
 
               <PaginationItem>
-                <Button disabled>{currentPage}</Button>
+                <Button variant="outline" disabled>
+                  {currentPage}
+                </Button>
               </PaginationItem>
 
               <PaginationItem>
                 <Button
+                  variant="outline"
                   onClick={nextPage}
                   disabled={currentPage === totalPages || loading}
                 >
-                  <ChevronRight />
                   Next
+                  <ChevronRight className="size-4" />
                 </Button>
               </PaginationItem>
             </PaginationContent>
