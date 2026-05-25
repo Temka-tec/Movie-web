@@ -12,11 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  TMDB_BASE_URL,
-  TMDB_IMAGE_BASE_URL,
-  TMDB_TOKEN,
-} from "@/lib/tmdb";
+import { TMDB_BASE_URL, TMDB_IMAGE_BASE_URL, TMDB_TOKEN } from "@/lib/tmdb";
 
 type TMDBVideo = { key: string; site: string; type: string; name: string };
 
@@ -381,9 +377,6 @@ export default function MovieDetailPage({
       <div className="mt-12">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-2xl font-bold">More like this</h2>
-          <Button variant="link" className="text-sm text-muted-foreground">
-            See more <ArrowRight />
-          </Button>
         </div>
 
         {similar.length === 0 ? (
