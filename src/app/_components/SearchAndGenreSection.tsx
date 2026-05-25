@@ -62,6 +62,7 @@ export const SearchAndGenreSection = () => {
           },
         },
       );
+
       const data = await res.json();
       setGenres(data.genres || []);
     };
@@ -76,6 +77,7 @@ export const SearchAndGenreSection = () => {
   useEffect(() => {
     const fetchMovies = async () => {
       setLoading(true);
+
       try {
         let url = "";
 
@@ -97,6 +99,7 @@ export const SearchAndGenreSection = () => {
         });
 
         const data: TMDBListResponse = await res.json();
+
         setMovies(data.results || []);
         setTotalPages(Math.min(data.total_pages || 1, 500));
       } catch (e) {
@@ -118,9 +121,9 @@ export const SearchAndGenreSection = () => {
       : "Popular";
 
   const subTitle = isSearching
-    ? `Results for “${qFromUrl}”`
+    ? `Results for "${qFromUrl}"`
     : genreId
-      ? `Movies in “${genreName || "this genre"}”`
+      ? `Movies in "${genreName || "this genre"}"`
       : "Trending / popular movies";
 
   return (
@@ -139,39 +142,66 @@ export const SearchAndGenreSection = () => {
           ) : movies.length === 0 ? (
             <div className="text-gray-600">No results</div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {movies.map((m) => (
-                <Link
-                  key={m.id}
-                  href={`/movie/${m.id}`}
-                  className="rounded-xl border bg-muted overflow-hidden block hover:shadow-md transition"
-                >
-                  <div className="aspect-[2/3] bg-gray-100">
-                    {m.poster_path ? (
-                      <img
-                        className="w-full h-full object-cover"
-                        src={`https://image.tmdb.org/t/p/w500${m.poster_path}`}
-                        alt={m.title}
-                      />
-                    ) : (
-                      <div className="w-full h-full grid place-items-center text-sm text-gray-500">
-                        <ImageOff />
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {movies.map((m) => (
+                  <Link
+                    key={m.id}
+                    href={`/movie/${m.id}`}
+                    className="rounded-xl border bg-muted overflow-hidden block hover:shadow-md transition"
+                  >
+                    <div className="aspect-[2/3] bg-gray-100">
+                      {m.poster_path ? (
+                        <img
+                          className="w-full h-full object-cover"
+                          src={`https://image.tmdb.org/t/p/w500${m.poster_path}`}
+                          alt={m.title}
+                        />
+                      ) : (
+                        <div className="w-full h-full grid place-items-center text-sm text-gray-500">
+                          <ImageOff />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-3">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                        <span>⭐</span>
+                        <span>{(m.vote_average ?? 0).toFixed(1)}/10</span>
                       </div>
-                    )}
+
+                      <p className="font-medium text-sm line-clamp-2">
+                        {m.title}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 mt-8">
+                  <button
+                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                    disabled={page === 1}
+                    className="px-4 py-2 rounded-lg border hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+
+                  <div className="text-sm font-medium">
+                    Page {page} / {totalPages}
                   </div>
 
-                  <div className="p-3">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                      <span>⭐</span>
-                      <span>{(m.vote_average ?? 0).toFixed(1)}/10</span>
-                    </div>
-                    <p className="font-medium text-sm line-clamp-2">
-                      {m.title}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  <button
+                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={page === totalPages}
+                    className="px-4 py-2 rounded-lg border hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -190,7 +220,9 @@ export const SearchAndGenreSection = () => {
             {genres.map((g) => (
               <Link
                 key={g.id}
-                href={`/discover?genre=${g.id}&name=${encodeURIComponent(g.name)}`}
+                href={`/discover?genre=${g.id}&name=${encodeURIComponent(
+                  g.name,
+                )}`}
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm transition ${
                   genreId === g.id
                     ? "bg-white text-black"
