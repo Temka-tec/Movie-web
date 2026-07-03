@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronRight, ImageOff } from "lucide-react";
+import { ChevronRight, ImageOff, Star } from "lucide-react";
 import Link from "next/link";
 
 type Genre = { id: number; name: string };
@@ -166,7 +166,7 @@ export const SearchAndGenreSection = () => {
 
                     <div className="p-3">
                       <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                        <span>⭐</span>
+                        <Star className="size-4 shrink-0 text-yellow-500" aria-hidden="true" />
                         <span>{(m.vote_average ?? 0).toFixed(1)}/10</span>
                       </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Film, ChevronDown, Search, ImageOff, X } from "lucide-react";
+import { Film, ChevronDown, Search, ImageOff, X, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ModeToggle } from "./ModeToggle";
@@ -256,7 +256,10 @@ export const Header = () => {
                               {movie.title}
                             </p>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                              <span>⭐ {movie.vote_average.toFixed(1)}</span>
+                              <span className="inline-flex items-center gap-1">
+                                <Star className="size-3.5 text-yellow-500" aria-hidden="true" />
+                                {movie.vote_average.toFixed(1)}
+                              </span>
                               {movie.release_date && (
                                 <>
                                   <span>·</span>

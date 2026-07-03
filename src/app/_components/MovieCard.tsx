@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ImageOff } from "lucide-react";
+import { ImageOff, Star } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 type MovieCardProps = {
@@ -38,7 +38,7 @@ export const MovieCard = ({ movie }: MovieCardProps) => {
 
       <div className="flex min-h-[96px] flex-1 flex-col justify-between p-3">
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-          <span>⭐</span>
+          <Star className="size-4 shrink-0 text-yellow-500" aria-hidden="true" />
           <span>{(movie.vote_average ?? 0).toFixed(1)}/10</span>
         </div>
 

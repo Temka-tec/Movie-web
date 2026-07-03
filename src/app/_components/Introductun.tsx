@@ -1,5 +1,7 @@
 "use client";
 
+import { Play, Star } from "lucide-react";
+
 type IntroductionProps = {
   name: string;
   moviename: string;
@@ -24,7 +26,7 @@ export const Introducton = ({
       <h1 className="text-5xl font-bold mb-4">{moviename}</h1>
 
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-yellow-400 text-2xl">★</span>
+        <Star className="size-6 text-yellow-400" aria-hidden="true" />
         <p className="text-xl">{rating.toFixed(1)}/10</p>
       </div>
 
@@ -34,7 +36,8 @@ export const Introducton = ({
         onClick={onWatchTrailer}
         className="bg-white text-black px-6 py-3 rounded-lg font-medium flex items-center gap-2 hover:bg-gray-200 transition"
       >
-        ▶ {btn}
+        <Play className="size-4" aria-hidden="true" />
+        <span>{btn}</span>
       </button>
     </div>
   );

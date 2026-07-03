@@ -3,7 +3,7 @@
 import { use } from "react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Star, Play, ImageOff, ArrowRight } from "lucide-react";
+import { Star, Play, ImageOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -406,7 +406,7 @@ export default function MovieDetailPage({
 
                 <div className="p-3">
                   <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                    <span>⭐</span>
+                    <Star className="size-4 shrink-0 text-yellow-500" aria-hidden="true" />
                     <span>{(m.vote_average ?? 0).toFixed(1)}/10</span>
                   </div>
                   <p className="font-medium text-sm line-clamp-2">{m.title}</p>
