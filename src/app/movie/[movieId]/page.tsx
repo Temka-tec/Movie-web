@@ -16,6 +16,33 @@ import { TMDB_BASE_URL, TMDB_IMAGE_BASE_URL, TMDB_TOKEN } from "@/lib/tmdb";
 
 type TMDBVideo = { key: string; site: string; type: string; name: string };
 
+type TMDBGenre = {
+  id: number;
+  name: string;
+};
+
+type TMDBCollection = {
+  id: number;
+  name: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+};
+
+type TMDBMovieDetail = {
+  id: number;
+  title: string;
+  overview: string;
+  release_date: string;
+  runtime: number;
+  adult: boolean;
+  vote_average: number;
+  vote_count: number;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  genres?: TMDBGenre[];
+  belongs_to_collection?: TMDBCollection | null;
+};
+
 type CreditPerson = {
   id: number;
   name: string;
@@ -37,6 +64,11 @@ type MovieCard = {
 
 type TMDBListResponse = {
   results: MovieCard[];
+};
+
+type TMDBCollectionResponse = {
+  name?: string;
+  parts?: MovieCard[];
 };
 
 const minutesToHM = (mins?: number) => {
@@ -132,9 +164,11 @@ export default function MovieDetailPage({
 }) {
   const { movieId } = use(params);
 
-  const [movie, setMovie] = useState<any | null>(null);
+  const [movie, setMovie] = useState<TMDBMovieDetail | null>(null);
   const [credits, setCredits] = useState<CreditsResponse | null>(null);
   const [similar, setSimilar] = useState<MovieCard[]>([]);
+  const [recommendationTitle, setRecommendationTitle] = useState("More like this");
+  const [recommendationSubtitle, setRecommendationSubtitle] = useState("");
   const [loadingPage, setLoadingPage] = useState(true);
 
   const [openTrailer, setOpenTrailer] = useState(false);
@@ -160,26 +194,116 @@ export default function MovieDetailPage({
     const fetchAll = async () => {
       setLoadingPage(true);
       try {
-        const [movieRes, creditsRes, similarRes] = await Promise.all([
+        const [movieRes, creditsRes] = await Promise.all([
           fetch(`${BASE}/movie/${movieId}?language=en-US`, { headers }),
           fetch(`${BASE}/movie/${movieId}/credits?language=en-US`, { headers }),
-          fetch(`${BASE}/movie/${movieId}/similar?language=en-US&page=1`, {
-            headers,
-          }),
         ]);
 
-        const movieData = await movieRes.json();
-        const creditsData = await creditsRes.json();
-        const similarData: TMDBListResponse = await similarRes.json();
+        if (!movieRes.ok) {
+          throw new Error(`Failed to fetch movie: ${movieRes.status}`);
+        }
+
+        if (!creditsRes.ok) {
+          throw new Error(`Failed to fetch credits: ${creditsRes.status}`);
+        }
+
+        const movieData: TMDBMovieDetail = await movieRes.json();
+        const creditsData: CreditsResponse = await creditsRes.json();
 
         setMovie(movieData);
         setCredits(creditsData);
-        setSimilar((similarData?.results ?? []).slice(0, 8));
+
+        const collectionId = movieData.belongs_to_collection?.id;
+        const genreIds = (movieData.genres ?? []).map((genre) => genre.id);
+
+        let nextSimilar: MovieCard[] = [];
+        let nextTitle = "More like this";
+        let nextSubtitle = "";
+
+        if (collectionId) {
+          const collectionRes = await fetch(
+            `${BASE}/collection/${collectionId}?language=en-US`,
+            { headers },
+          );
+
+          if (collectionRes.ok) {
+            const collectionData: TMDBCollectionResponse =
+              await collectionRes.json();
+            const collectionParts = (collectionData.parts ?? []).filter(
+              (part) => part.id !== movieData.id,
+            );
+
+            if (collectionParts.length > 0) {
+              nextSimilar = collectionParts;
+              nextTitle = "More in this collection";
+              nextSubtitle =
+                collectionData.name ?? movieData.belongs_to_collection?.name ?? "";
+            }
+          }
+        }
+
+        if (genreIds.length > 0) {
+          const discoverRes = await fetch(
+            `${BASE}/discover/movie?language=en-US&page=1&sort_by=popularity.desc&with_genres=${genreIds.join(",")}&include_adult=false`,
+            { headers },
+          );
+
+          if (discoverRes.ok) {
+            const discoverData: TMDBListResponse = await discoverRes.json();
+            const genreMatches = (discoverData.results ?? []).filter(
+              (item) =>
+                item.id !== movieData.id &&
+                !nextSimilar.some((existing) => existing.id === item.id),
+            );
+
+            nextSimilar = [...nextSimilar, ...genreMatches];
+
+            if (!collectionId && nextSimilar.length > 0) {
+              nextTitle = "More from this genre";
+              nextSubtitle = (movieData.genres ?? [])
+                .slice(0, 3)
+                .map((genre) => genre.name)
+                .join(" · ");
+            } else if (collectionId && genreMatches.length > 0) {
+              nextSubtitle = [
+                nextSubtitle,
+                (movieData.genres ?? [])
+                  .slice(0, 3)
+                  .map((genre) => genre.name)
+                  .join(" · "),
+              ]
+                .filter(Boolean)
+                .join(" · ");
+            }
+          }
+        }
+
+        nextSimilar = nextSimilar.slice(0, 8);
+
+        if (nextSimilar.length === 0) {
+          const similarRes = await fetch(
+            `${BASE}/movie/${movieId}/similar?language=en-US&page=1`,
+            { headers },
+          );
+
+          if (similarRes.ok) {
+            const similarData: TMDBListResponse = await similarRes.json();
+            nextSimilar = (similarData?.results ?? []).slice(0, 8);
+            nextTitle = "More like this";
+            nextSubtitle = "";
+          }
+        }
+
+        setSimilar(nextSimilar);
+        setRecommendationTitle(nextTitle);
+        setRecommendationSubtitle(nextSubtitle);
       } catch (e) {
         console.error(e);
         setMovie(null);
         setCredits(null);
         setSimilar([]);
+        setRecommendationTitle("More like this");
+        setRecommendationSubtitle("");
       } finally {
         setLoadingPage(false);
       }
@@ -376,7 +500,14 @@ export default function MovieDetailPage({
 
       <div className="mt-12">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-2xl font-bold">More like this</h2>
+          <div>
+            <h2 className="text-2xl font-bold">{recommendationTitle}</h2>
+            {recommendationSubtitle ? (
+              <p className="text-sm text-muted-foreground mt-1">
+                {recommendationSubtitle}
+              </p>
+            ) : null}
+          </div>
         </div>
 
         {similar.length === 0 ? (
